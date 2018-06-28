@@ -15,7 +15,7 @@ import { Logger, Security, breadcrumber } from "../util";
 import { RestError } from "./util";
 import { Config } from "../Config";
 import { ERROR_CODES } from "../Constants";
-import { User } from "../database/entities/User";
+import { Player } from "../database/entities/Player";
 
 const cors = require("cors")({
     origin: function (origin, callback) {
@@ -280,7 +280,7 @@ export class HttpServer {
 }
 
 export interface RequestDataStore {
-    user: User;
+    user: Player;
     [key: string]: any;
 }
 
@@ -290,7 +290,7 @@ export interface Request extends ExpressRequest {
         [key: string]: any;
     };
     params: any;
-    user?: User; // fill this in with your user model
+    user?: Player; // fill this in with your user model
     query: {[key: string]: string | undefined};
 }
 

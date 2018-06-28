@@ -1,6 +1,6 @@
 import { connect } from './database';
 import { HttpServer } from "./http";
-import { User } from "./database/entities/User";
+import { Player } from "./database/entities/Player";
 import { Config } from "./Config";
 import paypal from "paypal-rest-sdk";
 import Raven from "raven";
@@ -33,12 +33,15 @@ process.on("unhandledRejection", e => {
     Raven.captureException(e);
 });
 
-connect().then(() => {
+connect().then((connection) => {
     const server: HttpServer = new HttpServer(Number.parseInt(process.env.HTTP_PORT as string) || Config.port);
     Frontend.startCompiler();
+    const repl = require("repl");
+    const replServer = repl.start();
+    replServer.context.connection = connection;
 });
 
-setInterval(async () => await User.deleteApplicableUsers(), 30000); // Delete applicable users every 30 seconds
+setInterval(async () => await Player.deleteApplicableUsers(), 30000); // Delete applicable users every 30 seconds
 
 if (!Config.paypalWebhookID || Config.paypalWebhookID.length <= 0 || !Config.paypalClientID || !Config.paypalClientSecret) {
     Logger.warn("PayPal configuration was invalid or insecure. PayPal will not be available.");

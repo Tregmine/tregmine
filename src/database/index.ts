@@ -6,12 +6,12 @@ const entityDir = join(__dirname, "entities", "*.js");
 
 export function connect() {
     return createConnection({
-        type: process.env.DATABASE_ENGINE as any || "postgres",
+        type: process.env.DATABASE_ENGINE as any || "mysql",
         host: process.env.DATABASE_HOST || "localhost",
-        port: Number.parseInt(process.env.DATABASE_PORT as any) || 5432,
+        port: Number.parseInt(process.env.DATABASE_PORT as any) || 3306,
         username: process.env.DATABASE_USERNAME,
         password: process.env.DATABASE_PASSWORD,
-        database: process.env.DATABASE_NAME as any || "DynasticAccounts",
+        database: process.env.DATABASE_NAME as any || "tregmine_test",
         entities: [entityDir],
         logging: false,
         synchronize: true
