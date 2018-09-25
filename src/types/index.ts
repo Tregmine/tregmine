@@ -84,7 +84,16 @@ interface Expires {
 type BaseType = Timestamped & PlayerLinked & Unique;
 
 export enum Rank {
-    UNVERIFIED, TOURIST, SETTLER, RESIDENT, DONATOR, BUILDER, CODER, GUARDIAN, JUNIOR_ADMIN, SENIOR_ADMIN
+    UNVERIFIED,
+    TOURIST,
+    SETTLER,
+    RESIDENT,
+    DONATOR,
+    BUILDER,
+    CODER,
+    GUARDIAN,
+    JUNIOR_ADMIN,
+    SENIOR_ADMIN
 }
 
 export enum InventoryType {
@@ -233,4 +242,20 @@ export interface BankTransaction extends BaseType, Quantity {
     account?: BankAccount;
     accountId: string;
     type: string;
+}
+
+export enum AccessLevel {
+    RESTRICTED_READ = 0, READ_ONLY = 1, RESTRICTED_RW = 2, READ_WRITE = 3
+}
+
+export interface Application extends Unique, Named {
+    access: AccessLevel;
+    disabled: boolean;
+}
+
+export interface ErrorReport {
+    errorMessage: string;
+    ref: string;
+    version: string;
+    timestamp: number;
 }

@@ -1,4 +1,4 @@
-import {Entity, Column, OneToMany, ManyToOne, PrimaryColumn, ManyToMany, CreateDateColumn, BaseEntity} from "typeorm";
+import {Entity, Column, OneToMany, ManyToOne, PrimaryColumn, ManyToMany, CreateDateColumn, BaseEntity, ObjectType} from "typeorm";
 import {IsEmail, IsUUID} from "class-validator";
 import { Player as PlayerType, Rank } from "../../types";
 import bcrypt from "bcrypt";
@@ -19,6 +19,7 @@ import { ZoneUser } from "./ZoneUser";
 import { BankAccount } from "./BankAccount";
 import { WarpLog } from "./WarpLog";
 import { ZoneLotUser } from "./ZoneLotUser";
+import { Minecraft } from "../../util";
 
 @Entity()
 export class Player extends BaseEntity implements Serializable {
@@ -128,8 +129,16 @@ export class Player extends BaseEntity implements Serializable {
         }
     }
 
+    public getMojangProfile(): Promise<Minecraft.Profile | null> {
+        return Minecraft.getProfile(this.uuid);
+    }
+
     public passwordMatches(password: string) {
         return bcrypt.compare(password, this.password!);
+    }
+
+    public async setPassword(newPassword: string): Promise<void> {
+        this.password = await bcrypt.hash(newPassword, 10);
     }
 
     static async deleteApplicableUsers() {

@@ -1,0 +1,16 @@
+body {
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    font-family: -apple-system-font, BlinkMacSystemFont, "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;;
+}
+
+.headline {
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.5s ease;
+
+    &.headline-action:hover {
+        cursor: pointer;
+    }
+}

@@ -6,6 +6,8 @@ import paypal from "paypal-rest-sdk";
 import Raven from "raven";
 import { Logger, Frontend } from './util';
 import * as Constants from "./Constants";
+import { readdirSync } from 'fs';
+import { join } from 'path';
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
 
@@ -38,7 +40,16 @@ connect().then((connection) => {
     Frontend.startCompiler();
     const repl = require("repl");
     const replServer = repl.start();
+    const entities = {};
+    for (let file of readdirSync(join(__dirname, "database", "entities"))) {
+        if (!file.endsWith(".js")) continue;
+        const entity = require("./database/entities/" + file);
+        const key = Object.keys(entity)[0];
+        entities[key] = entity[key];
+    }
+    replServer.context.entities = entities;
     replServer.context.connection = connection;
+    replServer.context.Constants = Constants;
 });
 
 setInterval(async () => await Player.deleteApplicableUsers(), 30000); // Delete applicable users every 30 seconds

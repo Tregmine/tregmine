@@ -14,7 +14,7 @@ import configurePassport from "../passport-auth";
 import { Logger, Security, breadcrumber } from "../util";
 import { RestError } from "./util";
 import { Config } from "../Config";
-import { ERROR_CODES } from "../Constants";
+import { ERROR_CODES, DEBUG } from "../Constants";
 import { Player } from "../database/entities/Player";
 
 const cors = require("cors")({
@@ -79,6 +79,7 @@ export class HttpServer {
     private async loadServer(): Promise<void> {
         // Prints the request information to Winston
         this.server.use((req, _, next) => {
+            (req as any).data = {};
             Logger.debug(req.url, "http", "req", req.method);
             trail("debug", `${req.method} ${req.url}`);
             next();
@@ -125,20 +126,38 @@ export class HttpServer {
         if (!(await fs.pathExists(API_DIR))) {
             await fs.mkdir(API_DIR);
         }
+
         await this.loadDirectory(API_DIR);
 
         // Expose the frontend
-        this.server.use("/", express.static(path.join(__dirname, "..", "public")));
+        this.server.use(express.static(path.join(__dirname, "..", "public"), {
+            etag: !DEBUG,
+            setHeaders: DEBUG ? function (res, path) {
+                function unsetCacheHeaders(this: any) {
+                    this.removeHeader('Etag')
+                    this.removeHeader('Last-Modified')
+                }
+                // no etag or last-modified for index.html files
+                if (path.substr(10) === 'index.html') {
+                    require("on-headers")(res, unsetCacheHeaders)
+                }
+            } : undefined
+        }));
+
+        const index = await fs.readFile(path.join(__dirname, "..", "public", "index.html"));
+        // All other requets are sent to the SPA
+        this.server.use(async (req, res, next) => {
+            if (!DEBUG) {
+                res.contentType('html').send(index);
+            } else {
+                res.contentType('html').send(await fs.readFile(path.join(__dirname, "..", "public", "index.html")));
+            }
+        });
 
         await this.load();
 
-        // Serve the SPA for any other requetss
-        this.server.use((_, __, next) => {
-            next(new RestError(404))
-        });
-
         // used for error reporting
-        this.server.use(async (err: any, req: express.Request, res: any, __: any) => {
+        this.server.use(async (err: any, req: express.Request, res: any, next: any) => {
             const transmit = (error: RestError<any>) => res.status(typeof error.statusCode === "number" ? error.statusCode : 400).json({error: error.body});
             if (err instanceof RestError) {
                 transmit(err);
@@ -193,7 +212,7 @@ export class HttpServer {
         // Determine whether this route is for the api or for the public
         var middleware: any[] = (route.opts.guards || []);
         // Setup CSRF protection
-        if (!route.opts.bypassesCSRF) {
+        if (!route.opts.bypassesCSRF && !DEBUG) {
             middleware.push((req, res, next) => {
                 if ((req as any).usedOAuth === true) return next();
                 csurf()(req, res, next);
@@ -203,6 +222,10 @@ export class HttpServer {
                 next();
             });
             middleware.push((err, req, res, next) => {
+                if (process.env.NODE_ENV !== 'production') {
+                    next(err);
+                    return;
+                }
                 if (err.code !== 'EBADCSRFTOKEN') return next(err);
                 // Handle csrf token errors on our own
                 if (req.csrfToken) res.append("X-Use-CSRF-Token", req.csrfToken());

@@ -7,25 +7,33 @@ export default (passport: PassportStatic) => {
     /* Serialising etc */
 
     passport.serializeUser((user: Player, cb) => {
-        cb(null, user.id);
+        cb(null, user.uuid);
     });
 
-    passport.deserializeUser((id: string, cb) => {
-        Player.findOne({ id: id }).then(user => cb(null, user)).catch(cb);
+    passport.deserializeUser(async (uuid: string, cb) => {
+        try {
+            const user = await Player.findOne({uuid});
+            cb(null, user);
+        } catch (e) {
+            cb(e);
+        }
     });
 
     /* Local Auth Strategy */
 
     passport.use("local", new Strategy(
         { usernameField: "username" },
-        (name, password, done) => {
-            Player.findOne({ name }).then(async user => {
+        async (name, password, done) => {
+            try {
+                const user = await Player.findOne({ name });
                 if (!user) {
                     return done(null, false);
                 }
                 if (!user.password || !await user.passwordMatches(password)) return done(null, false);
                 done(null, user);
-            }).catch(err => done(err, null));
+            } catch (e) {
+                done(e);
+            }
         }
     ));
 }

@@ -35,8 +35,12 @@ export const DEBUG = process.env.NODE_ENV === "development";
 
 export const API_V0_ROUTES = prefix({
     AUTH: prefix({
-        SOCIAL: "/social"
-    }, "/auth")
+        SOCIAL: "/social",
+        LOGIN: "/login"
+    }, "/auth"),
+    USER: prefix({
+        BASE: "/"
+    }, "/user/:id")
 }, "/v0");
 
 export const PAYPAL_ENABLED = true;
@@ -50,7 +54,8 @@ export const ERROR_CODES = {
     OAUTH_FAIL: 2001,
     MISSING_EMAIL: 1001,
     EMAIL_IN_USE: 1002,
-    INVALID_SESSION_TOKEN: 1003
+    INVALID_SESSION_TOKEN: 1003,
+    INVALID_CREDENTIALS: 1004
 }
 
 export const FRONTEND_URL = "";

@@ -14,7 +14,12 @@ export function connect() {
         database: process.env.DATABASE_NAME as any || "tregmine_test",
         entities: [entityDir],
         logging: false,
-        synchronize: true
+        synchronize: true,
+        cache: {
+            type: "redis",
+            alwaysEnabled: true,
+            duration: 30000
+        }
         // synchronize: process.env.NODE_ENV == "debug" ? true : false,  // Disable on production
     });
 }
